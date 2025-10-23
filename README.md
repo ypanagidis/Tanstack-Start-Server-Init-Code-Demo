@@ -1,21 +1,113 @@
-Welcome to your new TanStack app! 
+Welcome to your TanStack + Nitro demo!
 
-# Getting Started
+This repository starts from a stock `pnpm create start-app@latest` project. The only changes are:
+
+- Vite config updated to enable the Nitro v2 plugin.
+- Installed Nitro runtime and the Nitro Vite plugin.
+- Added a simple Nitro plugin that runs server-side code once on server boot.
+- Added a simple Vite plugin that runs the same server side code once on dev
+
+Quickly verify the server-boot plugin by running dev and watching your terminal for a single startup log. We wire the same startup hook to both Nitro (prod) and Vite dev, so you’ll see it in both.
+
+## Getting Started
 
 To run this application:
 
 ```bash
 pnpm install
-pnpm start
+pnpm dev
 ```
 
-# Building For Production
+You should see a log similar to the following once when the dev server starts:
 
-To build this application for production:
+```
+Any Server Startup Code here:  [Nitro app object]
+```
+
+## Building For Production
+
+To build this application for production and run the built Nitro server:
 
 ```bash
 pnpm build
+pnpm nitro:start
 ```
+
+Alternatively, you can preview via Vite’s static preview if desired:
+
+```bash
+pnpm serve
+```
+
+## What Changed vs. Stock
+
+- `package.json` adds Nitro and a convenience script to run the built server.
+- `src/nitro-plugins/demo.ts` defines a plugin executed once at server start.
+- `src/server/bootstrap.ts` is a shared function called by both Nitro and the Vite dev plugin.
+
+### Key Files
+
+- vite.config.ts
+
+```ts
+import { defineConfig } from "vite";
+import { tanstackStart } from "@tanstack/react-start/plugin/vite";
+import viteReact from "@vitejs/plugin-react";
+import viteTsConfigPaths from "vite-tsconfig-paths";
+import tailwindcss from "@tailwindcss/vite";
+import { nitroV2Plugin } from "@tanstack/nitro-v2-vite-plugin";
+
+export default defineConfig({
+  plugins: [
+    devStartup,
+    nitroV2Plugin({
+      preset: "node-server",
+      plugins: ["./src/nitro-plugins/demo.ts"],
+    }),
+    viteTsConfigPaths({ projects: ["./tsconfig.json"] }),
+    tailwindcss(),
+    tanstackStart(),
+    viteReact(),
+  ],
+});
+```
+
+- src/nitro-plugins/demo.ts
+
+```ts
+import { defineNitroPlugin } from "nitro/runtime";
+import { onServerStart } from "../server/bootstrap";
+export default defineNitroPlugin((nitroApp) => {
+  onServerStart({ env: "nitro", nitroApp });
+});
+```
+
+- package.json
+
+```json
+{
+  "scripts": {
+    "dev": "vite dev --port 3000",
+    "build": "vite build",
+    "serve": "vite preview",
+    "nitro:start": "node .output/server/index.mjs"
+  },
+  "dependencies": {
+    "@tanstack/nitro-v2-vite-plugin": "^1.132.31",
+    "nitro": "3.0.1-alpha.0"
+  }
+}
+```
+
+Notes:
+
+- The Nitro plugin runs only once at server start (production).
+- The production server entry is emitted to `.output/server/index.mjs`.
+- A small dev-only Vite plugin calls the same startup hook so you get the log once when `vite dev` starts.
+
+---
+
+Below are the original starter notes for convenience.
 
 ## Testing
 
@@ -29,18 +121,15 @@ pnpm test
 
 This project uses [Tailwind CSS](https://tailwindcss.com/) for styling.
 
-
 ## Linting & Formatting
 
 This project uses [Biome](https://biomejs.dev/) for linting and formatting. The following scripts are available:
-
 
 ```bash
 pnpm lint
 pnpm format
 pnpm check
 ```
-
 
 ## Shadcn
 
@@ -50,9 +139,8 @@ Add components using the latest version of [Shadcn](https://ui.shadcn.com/).
 pnpx shadcn@latest add button
 ```
 
-
-
 ## Routing
+
 This project uses [TanStack Router](https://tanstack.com/router). The initial setup is a file based router. Which means that the routes are managed as files in `src/routes`.
 
 ### Adding A Route
@@ -88,8 +176,8 @@ In the File Based Routing setup the layout is located in `src/routes/__root.tsx`
 Here is an example layout that includes a header:
 
 ```tsx
-import { Outlet, createRootRoute } from '@tanstack/react-router'
-import { TanStackRouterDevtools } from '@tanstack/react-router-devtools'
+import { Outlet, createRootRoute } from "@tanstack/react-router";
+import { TanStackRouterDevtools } from "@tanstack/react-router-devtools";
 
 import { Link } from "@tanstack/react-router";
 
@@ -106,13 +194,12 @@ export const Route = createRootRoute({
       <TanStackRouterDevtools />
     </>
   ),
-})
+});
 ```
 
 The `<TanStackRouterDevtools />` component is not required so you can remove it if you don't want it in your layout.
 
 More information on layouts can be found in the [Layouts documentation](https://tanstack.com/router/latest/docs/framework/react/guide/routing-concepts#layouts).
-
 
 ## Data Fetching
 

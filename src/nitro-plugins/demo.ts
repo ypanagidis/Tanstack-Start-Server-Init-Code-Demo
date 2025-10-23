@@ -1,4 +1,6 @@
-import { defineNitroPlugin } from "nitro/runtime";
+import { defineNitroPlugin } from "nitropack/runtime";
+import { onServerStart } from "../server/bootstrap";
+
 export default defineNitroPlugin((nitroApp) => {
-	console.log("Any Server Startup Code here: ", nitroApp);
+	onServerStart({ env: "nitro", nitroApp });
 });
