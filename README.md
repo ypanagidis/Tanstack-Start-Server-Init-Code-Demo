@@ -50,26 +50,36 @@ pnpm serve
 - vite.config.ts
 
 ```ts
-import { defineConfig } from "vite";
-import { tanstackStart } from "@tanstack/react-start/plugin/vite";
-import viteReact from "@vitejs/plugin-react";
-import viteTsConfigPaths from "vite-tsconfig-paths";
-import tailwindcss from "@tailwindcss/vite";
-import { nitroV2Plugin } from "@tanstack/nitro-v2-vite-plugin";
+import { defineConfig } from 'vite'
+import { tanstackStart } from '@tanstack/react-start/plugin/vite'
+import viteReact from '@vitejs/plugin-react'
+import viteTsConfigPaths from 'vite-tsconfig-paths'
+import tailwindcss from '@tailwindcss/vite'
+import { nitroV2Plugin } from '@tanstack/nitro-v2-vite-plugin'
+import { onServerStart } from './src/server/bootstrap'
+
+// Dev-only plugin to mirror Nitro startup behavior in Vite dev
+const devStartup = {
+  name: 'dev-startup-once',
+  apply: 'serve' as const,
+  configureServer() {
+    onServerStart({ env: 'vite-dev' })
+  },
+}
 
 export default defineConfig({
   plugins: [
     devStartup,
     nitroV2Plugin({
-      preset: "node-server",
-      plugins: ["./src/nitro-plugins/demo.ts"],
+      preset: 'node-server',
+      plugins: ['./src/nitro-plugins/demo.ts'],
     }),
-    viteTsConfigPaths({ projects: ["./tsconfig.json"] }),
+    viteTsConfigPaths({ projects: ['./tsconfig.json'] }),
     tailwindcss(),
     tanstackStart(),
     viteReact(),
   ],
-});
+})
 ```
 
 - src/nitro-plugins/demo.ts
@@ -103,7 +113,16 @@ Notes:
 
 - The Nitro plugin runs only once at server start (production).
 - The production server entry is emitted to `.output/server/index.mjs`.
-- A small dev-only Vite plugin calls the same startup hook so you get the log once when `vite dev` starts.
+- A dev-only Vite plugin calls the same startup hook so you get the log once when `vite dev` starts.
+
+## Vite Dev Startup Plugin
+
+- Purpose: Mirror Nitro’s one-time startup behavior during `vite dev`.
+- Location: `vite.config.ts` as `dev-startup-once` plugin.
+- Hook: Uses `configureServer()`; runs once when the Vite dev server starts.
+- Context: Calls `onServerStart({ env: 'vite-dev' })`. No `nitroApp` context exists in Vite.
+- Scope: Dev-only via `apply: 'serve'` — not included in production builds.
+- Caveat: Mirrors startup side-effects/logging, but does not provide Nitro runtime APIs in dev.
 
 ---
 
