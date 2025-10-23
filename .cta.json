@@ -1,0 +1,18 @@
+{
+  "projectName": "nitro-demo",
+  "mode": "file-router",
+  "typescript": true,
+  "tailwind": true,
+  "packageManager": "pnpm",
+  "addOnOptions": {},
+  "git": true,
+  "version": 1,
+  "framework": "react-cra",
+  "chosenAddOns": [
+    "biome",
+    "nitro",
+    "start",
+    "tanstack-query",
+    "shadcn"
+  ]
+}
